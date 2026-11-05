@@ -6,9 +6,23 @@ const { Pool, types } = pg;
 // Keep DATE columns as string 'YYYY-MM-DD' without timezone conversion
 types.setTypeParser(1082, (val: string) => val);
 
-const connectionString =
+// Resolve connection string from environment variables (Neon / Netlify / Cloud)
+const envConnectionString =
   process.env.DATABASE_URL ||
+  process.env.NEON_DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.NETLIFY_DATABASE_URL;
+
+const defaultNeonString =
   'postgresql://neondb_owner:npg_To0dsF1LDlkM@ep-summer-waterfall-a1r518z5-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+
+const connectionString = envConnectionString || defaultNeonString;
+
+if (envConnectionString) {
+  console.log('[Neon Postgres] Using connection string from environment variable (DATABASE_URL / NEON_DATABASE_URL / POSTGRES_URL).');
+} else {
+  console.log('[Neon Postgres] DATABASE_URL not set in env, using default Neon project connection string.');
+}
 
 export const pool = new Pool({
   connectionString,

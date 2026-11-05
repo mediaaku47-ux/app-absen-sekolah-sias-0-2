@@ -14,7 +14,12 @@ import {
   AnnouncementItem,
 } from '../types.ts';
 
-const API_BASE = '/api';
+// Resolusi Base URL API dari Environment Variable (VITE_API_URL / VITE_API_BASE) atau default '/api'
+const API_BASE = (
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE) ||
+  '/api'
+).replace(/\/$/, '');
 
 function getHeaders(): HeadersInit {
   const token = localStorage.getItem('absen_solat_token');
@@ -35,12 +40,28 @@ async function handleResponse<T>(res: Response): Promise<T> {
       localStorage.removeItem('absen_solat_user');
       window.dispatchEvent(new Event('auth_change'));
     }
-    throw new Error(data.error || 'Terjadi kesalahan sistem');
+    throw new Error(data.error || 'Terjadi kesalahan pada server API');
   }
   return data as T;
 }
 
 export const api = {
+  // Verifikasi Koneksi Neon PostgreSQL
+  async checkDatabaseConnection(): Promise<{
+    status: string;
+    database: string;
+    connected: boolean;
+    current_database?: string;
+    current_user?: string;
+    total_users?: number;
+    error?: string;
+  }> {
+    const res = await fetch(`${API_BASE}/health`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return handleResponse(res);
+  },
   // Auth
   async login(username: string, password: string): Promise<{ token: string; user: User }> {
     const res = await fetch(`${API_BASE}/auth/login`, {

@@ -7,6 +7,7 @@ import {
   Save,
   CheckCircle,
   AlertCircle,
+  LogOut,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../services/api.ts';
@@ -16,7 +17,7 @@ interface ProfileProps {
 }
 
 export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
 
   const [formData, setFormData] = useState({
     name: user?.name || 'Kamal',
@@ -286,6 +287,19 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
               <span className="text-xs font-bold text-emerald-700">2026/2027 (Semester Ganjil)</span>
             </div>
           </div>
+        </div>
+
+        {/* Tombol Log Out di Paling Bawah Profil */}
+        <div className="pt-2 pb-6">
+          <button
+            type="button"
+            onClick={logout}
+            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 active:scale-[0.98] transition-all font-jakarta font-bold text-sm cursor-pointer shadow-xs"
+            title="Keluar dari akun SIAS"
+          >
+            <LogOut className="w-4 h-4 text-rose-500 shrink-0" />
+            <span>Keluar / Log Out</span>
+          </button>
         </div>
       </div>
     </div>

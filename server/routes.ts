@@ -6,6 +6,30 @@ import { validateSchoolCategory } from '../src/utils/schoolValidation.ts';
 
 export const apiRouter = Router();
 
+// ================= HEALTH & DB VERIFICATION =================
+apiRouter.get('/health', async (_req, res) => {
+  try {
+    const dbInfo = (await db.queryOne('SELECT current_database(), current_user, version()')) as any;
+    const userCount = (await db.queryOne('SELECT COUNT(*) as count FROM users')) as any;
+    return res.json({
+      status: 'ok',
+      database: 'Neon PostgreSQL',
+      connected: true,
+      current_database: dbInfo?.current_database,
+      current_user: dbInfo?.current_user,
+      total_users: Number(userCount?.count || 0),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      status: 'error',
+      database: 'Neon PostgreSQL',
+      connected: false,
+      error: err.message,
+    });
+  }
+});
+
 // ================= AUTH ROUTES =================
 apiRouter.post('/auth/login', async (req, res) => {
   const { username, password } = req.body;
@@ -13,9 +37,12 @@ apiRouter.post('/auth/login', async (req, res) => {
     return res.status(400).json({ error: 'Username/email dan password harus diisi' });
   }
 
+  const trimmedUsername = String(username).trim();
+
+  // Cari user di Neon PostgreSQL berdasarkan username atau email secara case-insensitive
   const user = await db.prepare(`
-    SELECT * FROM users WHERE username = ? OR email = ?
-  `).get(username, username) as any;
+    SELECT * FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)
+  `).get(trimmedUsername, trimmedUsername) as any;
 
   if (!user || !verifyPassword(password, user.password_hash)) {
     return res.status(401).json({ error: 'Username atau password salah' });
@@ -29,7 +56,7 @@ apiRouter.post('/auth/login', async (req, res) => {
     role: user.role,
   };
 
-  // Ensure this user has classes provisioned
+  // Pastikan kelas default guru tersedia di database
   await ensureUserClasses(user.id);
 
   const token = generateToken(authUser);

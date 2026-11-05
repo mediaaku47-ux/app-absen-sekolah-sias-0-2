@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   HeartPulse,
   XCircle,
+  LogOut,
 } from 'lucide-react';
 import { api } from '../services/api.ts';
 import { DashboardStats } from '../types.ts';
@@ -21,7 +22,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   // Tanggal lokal hari ini yang akurat tanpa pergeseran zona waktu UTC
   const getTodayLocalDate = (): string => {
@@ -1032,6 +1033,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               </div>
             )}
           </section>
+        </div>
+
+        {/* Tombol Log Out di Paling Bawah Beranda */}
+        <div className="pt-6 pb-2 flex justify-center">
+          <button
+            type="button"
+            onClick={logout}
+            className="w-full sm:w-auto min-w-[220px] flex items-center justify-center gap-2.5 px-6 py-3 rounded-2xl bg-white border border-rose-200/90 text-rose-600 hover:bg-rose-50 hover:border-rose-300 active:scale-[0.98] transition-all font-jakarta font-bold text-sm shadow-xs cursor-pointer"
+            title="Keluar dari akun SIAS"
+          >
+            <LogOut className="w-4.5 h-4.5 text-rose-500 shrink-0" />
+            <span>Keluar / Log Out</span>
+          </button>
         </div>
 
       </main>
