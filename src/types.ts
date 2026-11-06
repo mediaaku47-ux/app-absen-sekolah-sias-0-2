@@ -234,4 +234,23 @@ export interface AnnouncementItem {
   views_count?: number;
 }
 
+export interface FeedbackItem {
+  id: number;
+  user_id?: number | null;
+  user_name: string;
+  user_email?: string | null;
+  user_username?: string | null;
+  user_role?: string | null;
+  rating: number;
+  feedback?: string | null;
+  created_at: string;
+}
+
+export interface FeedbackSummaryResponse {
+  total: number;
+  averageRating: number;
+  ratingCounts: { [key: number]: number };
+  feedbacks: FeedbackItem[];
+}
+
 

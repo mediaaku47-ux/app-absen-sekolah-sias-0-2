@@ -240,8 +240,19 @@ export async function initDatabase() {
       UNIQUE(announcement_id, user_id)
     );
 
+    CREATE TABLE IF NOT EXISTS feedbacks (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      user_name VARCHAR(255) NOT NULL,
+      user_email VARCHAR(255),
+      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      feedback TEXT,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS idx_announcements_created_at ON announcements(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_announcement_views_ann_id ON announcement_views(announcement_id);
+    CREATE INDEX IF NOT EXISTS idx_feedbacks_created_at ON feedbacks(created_at DESC);
     UPDATE users SET role = 'admin' WHERE username = 'kamal';
   `);
 

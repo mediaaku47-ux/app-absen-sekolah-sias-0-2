@@ -1914,3 +1914,105 @@ apiRouter.delete('/announcements/:id', requireAuth, async (req: AuthenticatedReq
   }
 });
 
+// ================= FEEDBACK & APP EVALUATION ROUTES =================
+apiRouter.post('/feedbacks', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { rating, feedback, userName, userEmail } = req.body;
+
+    const numericRating = Number(rating);
+    if (!numericRating || numericRating < 1 || numericRating > 5) {
+      return res.status(400).json({ error: 'Rating bintang harus antara 1 sampai 5.' });
+    }
+
+    const userId = req.user?.id || null;
+    const resolvedName = (req.user?.name || userName || 'Pengguna SIAS').trim();
+    const resolvedEmail = (req.user?.email || userEmail || null)?.trim();
+    const trimmedFeedback = (feedback || '').trim();
+
+    await db.prepare(`
+      INSERT INTO feedbacks (user_id, user_name, user_email, rating, feedback)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(userId, resolvedName, resolvedEmail, numericRating, trimmedFeedback);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Terima kasih atas masukan berharga Anda!'
+    });
+  } catch (error: any) {
+    console.error('Error saving feedback:', error);
+    return res.status(500).json({ error: error.message || 'Gagal menyimpan penilaian.' });
+  }
+});
+
+apiRouter.get('/feedbacks', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userRole = req.user?.role;
+    const username = req.user?.username?.toLowerCase();
+    const isMasterAdmin = username === 'kamal' || userRole === 'admin';
+
+    if (!isMasterAdmin) {
+      return res.status(403).json({ error: 'Akses khusus Administrator untuk melihat evaluasi dan masukan pengguna.' });
+    }
+
+    const feedbacks = await db.prepare(`
+      SELECT 
+        f.id,
+        f.user_id,
+        f.user_name,
+        f.user_email,
+        f.rating,
+        f.feedback,
+        f.created_at,
+        u.role as user_role,
+        u.username as user_username
+      FROM feedbacks f
+      LEFT JOIN users u ON f.user_id = u.id
+      ORDER BY f.created_at DESC
+      LIMIT 200
+    `).all() as any[];
+
+    // Hitung rata-rata dan distribusi rating
+    const total = feedbacks.length;
+    let sumRating = 0;
+    const ratingCounts: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+    for (const f of feedbacks) {
+      const r = Number(f.rating) || 0;
+      sumRating += r;
+      if (r >= 1 && r <= 5) {
+        ratingCounts[r] = (ratingCounts[r] || 0) + 1;
+      }
+    }
+
+    const averageRating = total > 0 ? Number((sumRating / total).toFixed(1)) : 0;
+
+    return res.json({
+      total,
+      averageRating,
+      ratingCounts,
+      feedbacks,
+    });
+  } catch (error: any) {
+    console.error('Error fetching feedbacks:', error);
+    return res.status(500).json({ error: error.message || 'Gagal mengambil data masukan.' });
+  }
+});
+
+apiRouter.delete('/feedbacks/:id', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userRole = req.user?.role;
+    const username = req.user?.username?.toLowerCase();
+    const isMasterAdmin = username === 'kamal' || userRole === 'admin';
+
+    if (!isMasterAdmin) {
+      return res.status(403).json({ error: 'Hanya Administrator yang berhak menghapus ulasan.' });
+    }
+
+    const id = Number(req.params.id);
+    await db.prepare('DELETE FROM feedbacks WHERE id = ?').run(id);
+    return res.json({ success: true, message: 'Masukan berhasil dihapus.' });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+

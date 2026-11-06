@@ -18,6 +18,7 @@ async function startServer() {
   const isProd = process.env.NODE_ENV === 'production';
 
   app.use(express.json());
+  app.use(express.static(path.resolve(__dirname, 'public')));
 
   // Mount API routes
   app.use('/api', apiRouter);
@@ -27,7 +28,7 @@ async function startServer() {
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
-        hmr: process.env.DISABLE_HMR !== 'true',
+        hmr: false,
       },
       appType: 'spa',
     });

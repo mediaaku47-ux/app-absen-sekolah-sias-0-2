@@ -12,6 +12,7 @@ import {
   ClassReportItem,
   AttendanceStatus,
   AnnouncementItem,
+  FeedbackSummaryResponse,
 } from '../types.ts';
 
 // Resolusi Base URL API dari Environment Variable (VITE_API_URL / VITE_API_BASE) atau default '/api'
@@ -403,6 +404,36 @@ export const api = {
 
   async deleteAnnouncement(id: number | string): Promise<{ success: boolean; message?: string }> {
     const res = await fetch(`${API_BASE}/announcements/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // Feedback & App Evaluation (Penilaian Pengguna & Evaluasi Admin)
+  async submitFeedback(payload: {
+    rating: number;
+    feedback?: string;
+    userName?: string;
+    userEmail?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${API_BASE}/feedbacks`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+  },
+
+  async getFeedbacks(): Promise<FeedbackSummaryResponse> {
+    const res = await fetch(`${API_BASE}/feedbacks`, {
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  async deleteFeedback(id: number | string): Promise<{ success: boolean; message?: string }> {
+    const res = await fetch(`${API_BASE}/feedbacks/${id}`, {
       method: 'DELETE',
       headers: getHeaders(),
     });

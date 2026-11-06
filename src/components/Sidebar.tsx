@@ -9,6 +9,7 @@ import {
   LogOut,
   Sparkles,
   Award,
+  MessageSquareHeart,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../services/api.ts';
@@ -22,6 +23,8 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate }) => {
   const { user, logout } = useAuth();
   const [schoolName, setSchoolName] = useState<string>('Absen Solat');
+
+  const isMasterAdmin = user?.username?.toLowerCase() === 'kamal' || user?.role === 'admin';
 
   useEffect(() => {
     api.getAppSettings().then((s) => {
@@ -47,6 +50,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate }) => 
     { id: '/prayers', label: 'Jenis Solat', icon: Clock },
     { id: '/academic-years', label: 'Tahun Ajaran', icon: CalendarDays },
     { id: '/settings', label: 'Pengaturan', icon: Settings },
+    ...(isMasterAdmin
+      ? [{ id: '/admin/feedback', label: 'Evaluasi & Saran', icon: MessageSquareHeart, badge: 'Admin' }]
+      : []),
     { id: '/welcome', label: 'Tampilan Awal & Login', icon: Sparkles, badge: 'Mobile' },
   ];
 

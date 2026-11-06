@@ -9,7 +9,10 @@ import {
   Sparkles,
   Lock,
   X,
+  Star,
+  MessageSquareHeart,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../services/api.ts';
 import { Header } from '../components/Header.tsx';
 import { PrayerType } from '../types.ts';
@@ -21,6 +24,9 @@ import {
 } from '../utils/schoolValidation.ts';
 
 export const Settings: React.FC = () => {
+  const { user } = useAuth();
+  const isMasterAdmin = user?.username?.toLowerCase() === 'kamal' || user?.role === 'admin';
+
   // School & Prayer System configuration
   const [schoolName, setSchoolName] = useState('');
   const [schoolLevel, setSchoolLevel] = useState<'SD' | 'SMP' | 'SMA'>('SMA');
@@ -377,6 +383,53 @@ export const Settings: React.FC = () => {
             </div>
           )}
         </form>
+
+        {/* ======================================================== */}
+        {/* KARTU PENILAIAN & SARAN APLIKASI (FEEDBACK) */}
+        {/* ======================================================== */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+                <Star className="w-4.5 h-4.5 fill-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-outfit font-extrabold text-sm sm:text-base text-slate-900 tracking-tight">
+                  Penilaian & Saran Aplikasi SIAS
+                </h3>
+                <p className="font-jakarta text-xs text-slate-500">
+                  Beri rating pengalaman dan saran fitur baru untuk pengembangan SIAS.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-feedback-modal'))}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer"
+            >
+              <MessageSquareHeart className="w-4 h-4" />
+              <span>Beri Penilaian & Saran</span>
+            </button>
+
+            {isMasterAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(
+                    new CustomEvent('app-navigate', { detail: { path: '/admin/feedback' } })
+                  );
+                }}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold rounded-xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Panel Evaluasi Admin</span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

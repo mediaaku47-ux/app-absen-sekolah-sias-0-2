@@ -8,6 +8,7 @@ import {
   CheckCircle,
   AlertCircle,
   LogOut,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../services/api.ts';
@@ -32,6 +33,11 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Status lipatan (accordion) untuk tiap kartu (semua tertutup saat pertama dibuka)
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  const [isTasksOpen, setIsTasksOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -165,126 +171,210 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
           </div>
         )}
 
-        {/* Card 1: Profil Guru / Administrator (Dipindahkan dari Pengaturan) */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-5">
-          <h3 className="font-outfit font-extrabold text-base text-slate-900 flex items-center gap-2">
-            <User className="w-5 h-5 text-emerald-600" />
-            <span>Profil Guru / Administrator</span>
-          </h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="font-outfit block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
-                Nama Lengkap
-              </label>
-              <input
-                type="text"
-                value={user?.name || formData.name}
-                readOnly
-                disabled
-                tabIndex={-1}
-                className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 font-bold"
-                title="Nama akun guru"
-              />
+        {/* Kartu 1: Profil Guru / Administrator */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all duration-300">
+          <button
+            type="button"
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/70 active:bg-slate-100/60 transition-colors cursor-pointer select-none"
+            aria-expanded={isProfileOpen}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <User className="w-4.5 h-4.5" />
+              </div>
+              <h3 className="font-outfit font-extrabold text-sm sm:text-base text-slate-900 tracking-tight">
+                Profil Guru / Administrator
+              </h3>
             </div>
-
-            <div>
-              <label className="font-outfit block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
-                Email
-              </label>
-              <input
-                type="email"
-                value={user?.email || formData.email}
-                readOnly
-                disabled
-                tabIndex={-1}
-                className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 font-bold"
-                title="Alamat email akun"
-              />
+            <div
+              className={`w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 transition-transform duration-300 ${
+                isProfileOpen ? 'rotate-180 bg-slate-100 text-slate-700' : 'rotate-0'
+              }`}
+            >
+              <ChevronDown className="w-4.5 h-4.5" />
             </div>
-          </div>
+          </button>
 
-          <div className="pt-4 border-t border-slate-100">
-            <h4 className="font-outfit font-extrabold text-sm sm:text-base text-slate-900 mb-1 flex items-center gap-2 tracking-tight">
-              <Lock className="w-4 h-4 text-emerald-600" />
-              <span>Ubah Password Akun</span>
-            </h4>
-            <p className="font-jakarta text-xs text-slate-500 mb-4 font-medium">
-              Kosongkan jika tidak ingin mengganti password
-            </p>
+          <div
+            className={`grid transition-all duration-300 ease-in-out ${
+              isProfileOpen ? 'grid-rows-[1fr] opacity-100 border-t border-slate-100' : 'grid-rows-[0fr] opacity-0'
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="p-5 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="font-outfit block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                      Nama Lengkap
+                    </label>
+                    <input
+                      type="text"
+                      value={user?.name || formData.name}
+                      readOnly
+                      disabled
+                      tabIndex={-1}
+                      className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 font-bold"
+                      title="Nama akun guru"
+                    />
+                  </div>
 
-            <form onSubmit={handleUpdatePassword} className="space-y-3 max-w-md">
-              <div>
-                <label className="font-outfit block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
-                  Password Saat Ini
-                </label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="font-outfit block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
-                  Password Baru
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="font-outfit block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
-                  Konfirmasi Password Baru
-                </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
-                />
-              </div>
-
-              {(currentPassword || newPassword || confirmPassword) && (
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={isUpdatingPassword}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>{isUpdatingPassword ? 'Menyimpan Password...' : 'Simpan Password Baru'}</span>
-                  </button>
+                  <div>
+                    <label className="font-outfit block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={user?.email || formData.email}
+                      readOnly
+                      disabled
+                      tabIndex={-1}
+                      className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 font-bold"
+                      title="Alamat email akun"
+                    />
+                  </div>
                 </div>
-              )}
-            </form>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Card 2: Ringkasan Tugas */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-xs">
-          <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center space-x-2">
-            <Award className="w-4 h-4 text-emerald-600" />
-            <span>Ringkasan Tugas</span>
-          </h3>
-
-          <div className="space-y-3">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-500 font-medium">Kelas Binaan</span>
-              <span className="text-xs font-bold text-slate-800">{formData.assignedClasses}</span>
+        {/* Kartu 2: Ubah Password Akun (Dipisahkan dari Kartu Profil) */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all duration-300">
+          <button
+            type="button"
+            onClick={() => setIsPasswordOpen(!isPasswordOpen)}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/70 active:bg-slate-100/60 transition-colors cursor-pointer select-none"
+            aria-expanded={isPasswordOpen}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <Lock className="w-4.5 h-4.5" />
+              </div>
+              <h3 className="font-outfit font-extrabold text-sm sm:text-base text-slate-900 tracking-tight">
+                Ubah Password Akun
+              </h3>
             </div>
+            <div
+              className={`w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 transition-transform duration-300 ${
+                isPasswordOpen ? 'rotate-180 bg-slate-100 text-slate-700' : 'rotate-0'
+              }`}
+            >
+              <ChevronDown className="w-4.5 h-4.5" />
+            </div>
+          </button>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-500 font-medium">Tahun Ajaran Aktif</span>
-              <span className="text-xs font-bold text-emerald-700">2026/2027 (Semester Ganjil)</span>
+          <div
+            className={`grid transition-all duration-300 ease-in-out ${
+              isPasswordOpen ? 'grid-rows-[1fr] opacity-100 border-t border-slate-100' : 'grid-rows-[0fr] opacity-0'
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="p-5 sm:p-6 space-y-3.5">
+                <p className="font-jakarta text-xs text-slate-500 font-medium">
+                  Kosongkan jika tidak ingin mengganti password
+                </p>
+
+                <form onSubmit={handleUpdatePassword} className="space-y-3 max-w-md">
+                  <div>
+                    <label className="font-outfit block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+                      Password Saat Ini
+                    </label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-outfit block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+                      Password Baru
+                    </label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-outfit block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
+                      Konfirmasi Password Baru
+                    </label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="font-jakarta w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                    />
+                  </div>
+
+                  {(currentPassword || newPassword || confirmPassword) && (
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={isUpdatingPassword}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>{isUpdatingPassword ? 'Menyimpan Password...' : 'Simpan Password Baru'}</span>
+                      </button>
+                    </div>
+                  )}
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Kartu 3: Ringkasan Tugas */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all duration-300">
+          <button
+            type="button"
+            onClick={() => setIsTasksOpen(!isTasksOpen)}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/70 active:bg-slate-100/60 transition-colors cursor-pointer select-none"
+            aria-expanded={isTasksOpen}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <Award className="w-4.5 h-4.5" />
+              </div>
+              <h3 className="font-outfit font-extrabold text-sm sm:text-base text-slate-900 tracking-tight">
+                Ringkasan Tugas
+              </h3>
+            </div>
+            <div
+              className={`w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 transition-transform duration-300 ${
+                isTasksOpen ? 'rotate-180 bg-slate-100 text-slate-700' : 'rotate-0'
+              }`}
+            >
+              <ChevronDown className="w-4.5 h-4.5" />
+            </div>
+          </button>
+
+          <div
+            className={`grid transition-all duration-300 ease-in-out ${
+              isTasksOpen ? 'grid-rows-[1fr] opacity-100 border-t border-slate-100' : 'grid-rows-[0fr] opacity-0'
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="p-5 sm:p-6 space-y-3">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-medium">Kelas Binaan</span>
+                  <span className="text-xs font-bold text-slate-800">{formData.assignedClasses}</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-medium">Tahun Ajaran Aktif</span>
+                  <span className="text-xs font-bold text-emerald-700">2026/2027 (Semester Ganjil)</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

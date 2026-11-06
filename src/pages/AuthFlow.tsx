@@ -14,8 +14,13 @@ import {
   Check,
   Sparkles,
   GraduationCap,
+  Download,
+  Globe,
+  X,
+  Smartphone,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
+import { usePWAInstall } from '../hooks/usePWAInstall.ts';
 import { api } from '../services/api.ts';
 import { AppLogo } from '../components/AppLogo.tsx';
 import {
@@ -43,6 +48,39 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({ onSuccess, initialScreen = '
   const [generalError, setGeneralError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+
+  // PWA Install prompt state
+  const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const [showInstallDialog, setShowInstallDialog] = useState(false);
+  const [showIOSInstallGuide, setShowIOSInstallGuide] = useState(false);
+
+  const handleStartClick = () => {
+    // Jika aplikasi sudah berjalan dalam mode PWA terpasang, langsung ke halaman login
+    if (isInstalled) {
+      setActiveScreen('login');
+      return;
+    }
+    // Tampilkan popup opsi menginstal aplikasi atau lanjut di Chrome
+    setShowInstallDialog(true);
+  };
+
+  const handleChooseInstall = async () => {
+    setShowInstallDialog(false);
+    if (isIOS) {
+      setShowIOSInstallGuide(true);
+      return;
+    }
+    // Pemicu unduhan langsung melalui dialog instalasi resmi browser
+    if (isInstallable) {
+      await install();
+    }
+    setActiveScreen('login');
+  };
+
+  const handleChooseContinueBrowser = () => {
+    setShowInstallDialog(false);
+    setActiveScreen('login');
+  };
 
   // Form states untuk Register (Pengguna Baru)
   const [regName, setRegName] = useState('');
@@ -325,7 +363,7 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({ onSuccess, initialScreen = '
                 {/* Tombol "Mulai" */}
                 <button
                   type="button"
-                  onClick={() => setActiveScreen('login')}
+                  onClick={handleStartClick}
                   className="w-full h-12 bg-white hover:bg-emerald-50 active:scale-[0.98] text-[#063826] font-semibold text-[16px] tracking-wide rounded-xl shadow-xl shadow-black/25 transition-all duration-200 flex items-center justify-center cursor-pointer group"
                 >
                   <span>Mulai</span>
@@ -924,6 +962,113 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({ onSuccess, initialScreen = '
               className="w-full py-2.5 bg-gradient-to-r from-[#063826] to-[#1e40af] text-white rounded-xl text-xs font-semibold hover:opacity-90 transition-all cursor-pointer"
             >
               Mengerti & Kembali
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Modal Dialog: Apakah Anda ingin menginstal aplikasi? */}
+      {showInstallDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-7 text-center text-slate-800 animate-in zoom-in-95 duration-200"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Tombol Silang (X) di Pojok Kanan Atas */}
+            <button
+              type="button"
+              onClick={handleChooseContinueBrowser}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+              title="Tutup dan lanjutkan di Chrome"
+              aria-label="Tutup"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Logo SIAS dengan Lingkaran Hijau Modern */}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#063826] via-[#094230] to-[#0d5940] shadow-md ring-4 ring-emerald-500/20 p-2 mx-auto mb-4 flex items-center justify-center">
+              <img
+                src="/assets/logo-192.png"
+                alt="Logo SIAS"
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            {/* Pertanyaan & Subteks */}
+            <h3 className="font-outfit font-black text-lg sm:text-xl text-slate-900 tracking-tight leading-snug">
+              Apakah Anda ingin menginstal aplikasi?
+            </h3>
+            <p className="font-jakarta text-xs sm:text-[13px] text-slate-500 mt-2 leading-relaxed max-w-[280px] mx-auto">
+              Pasang aplikasi SIAS langsung di HP untuk akses lebih cepat seperti aplikasi Android, atau lanjutkan di browser Chrome.
+            </p>
+
+            {/* 2 Opsi Pilihan Sesuai Permintaan: Ya (Download) atau Tidak (Lanjut di Chrome) */}
+            <div className="mt-6 space-y-2.5">
+              {/* Opsi 1: Ya -> Langsung download / instal */}
+              <button
+                type="button"
+                onClick={handleChooseInstall}
+                className="w-full py-3 px-4 rounded-xl font-jakarta font-bold text-sm text-white bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 hover:from-emerald-700 hover:to-teal-800 active:scale-[0.98] transition-all shadow-md shadow-emerald-950/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Ya, Download Aplikasi</span>
+              </button>
+
+              {/* Opsi 2: Tidak -> Lanjutkan di Chrome */}
+              <button
+                type="button"
+                onClick={handleChooseContinueBrowser}
+                className="w-full py-3 px-4 rounded-xl font-jakarta font-semibold text-xs sm:text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Globe className="w-4 h-4 text-slate-500" />
+                <span>Tidak, Lanjutkan di Chrome</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Panduan Tambah ke Layar Utama Khusus Pengguna iOS */}
+      {showIOSInstallGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <img src="/assets/logo-192.png" alt="Logo SIAS" className="w-8 h-8 rounded-lg" />
+                <h3 className="font-outfit font-black text-base text-slate-900">
+                  Pasang SIAS di iPhone / iPad
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowIOSInstallGuide(false);
+                  setActiveScreen('login');
+                }}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 text-xs text-slate-600 font-medium">
+              <div className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0">1</span>
+                <p>Tekan tombol <strong>Bagikan / Share</strong> (ikon kotak dengan panah ke atas) di bilah bawah browser Safari.</p>
+              </div>
+              <div className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0">2</span>
+                <p>Gulir ke bawah lalu pilih menu <strong>Tambahkan ke Layar Utama (Add to Home Screen)</strong>.</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowIOSInstallGuide(false);
+                setActiveScreen('login');
+              }}
+              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold text-xs text-white cursor-pointer shadow-xs"
+            >
+              Lanjutkan ke Aplikasi
             </button>
           </div>
         </div>

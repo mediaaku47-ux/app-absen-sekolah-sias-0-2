@@ -26,7 +26,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentPath, onNavigate })
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-800 py-1.5 px-1.5 grid grid-cols-5 items-center shadow-lg">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800/90 px-2 pt-2 pb-2.5 sm:pb-3 grid grid-cols-5 gap-1 items-center shadow-[0_-4px_24px_rgba(0,0,0,0.4)]">
       {mainTabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = currentPath === tab.id;
@@ -34,16 +34,20 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentPath, onNavigate })
           <button
             key={tab.id}
             onClick={() => onNavigate(tab.id)}
-            className={`group w-full flex flex-col items-center justify-center py-1 px-0.5 rounded-lg text-[11px] transition-colors cursor-pointer text-center select-none ${
-              isActive ? 'text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200 font-medium'
+            className={`group w-full flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl text-[11px] transition-all duration-200 cursor-pointer text-center select-none active:scale-95 ${
+              isActive
+                ? 'text-emerald-400 font-bold bg-emerald-500/12 ring-1 ring-emerald-500/30 shadow-xs'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 font-medium'
             }`}
           >
-            <div className="w-5 h-5 mb-1 flex items-center justify-center shrink-0">
+            <div className="relative w-6 h-6 mb-1 flex items-center justify-center shrink-0">
               {tab.iconSrc ? (
                 <img
                   src={tab.iconSrc}
                   alt={tab.label}
-                  className="w-5 h-5 object-contain transition-all"
+                  className={`w-5.5 h-5.5 object-contain transition-transform duration-200 ${
+                    isActive ? 'scale-110 drop-shadow-xs' : 'group-hover:scale-105'
+                  }`}
                   style={{
                     filter: isActive
                       ? 'invert(72%) sepia(51%) saturate(544%) hue-rotate(114deg) brightness(96%) contrast(89%)'
@@ -51,10 +55,14 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentPath, onNavigate })
                   }}
                 />
               ) : Icon ? (
-                <Icon className={`w-5 h-5 ${isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                <Icon
+                  className={`w-5.5 h-5.5 transition-transform duration-200 ${
+                    isActive ? 'scale-110 text-emerald-400 drop-shadow-xs' : 'text-slate-400 group-hover:scale-105 group-hover:text-slate-200'
+                  }`}
+                />
               ) : null}
             </div>
-            <span className="w-full truncate text-center tracking-tight leading-none block">
+            <span className="w-full truncate text-center font-jakarta tracking-tight leading-none block">
               {tab.label}
             </span>
           </button>

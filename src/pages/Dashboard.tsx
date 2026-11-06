@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   HeartPulse,
   XCircle,
-  LogOut,
+  Loader2,
 } from 'lucide-react';
 import { api } from '../services/api.ts';
 import { DashboardStats } from '../types.ts';
@@ -22,7 +22,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   // Tanggal lokal hari ini yang akurat tanpa pergeseran zona waktu UTC
   const getTodayLocalDate = (): string => {
@@ -39,6 +39,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const todayDate = getTodayLocalDate();
   const isToday = selectedDate >= todayDate;
   const [isLoading, setIsLoading] = useState(true);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [detailStudentId, setDetailStudentId] = useState<number | null>(null);
 
   // Jumlah notifikasi yang belum dibaca (unread count)
@@ -81,14 +82,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
   // Ambil data statistik dari backend
   const fetchStats = async (date: string) => {
-    setIsLoading(true);
+    setIsStatsLoading(true);
+    const startTime = Date.now();
     try {
       const data = await api.getDashboardStats(date);
+      // Buffer minimal 300ms agar animasi loading spinner terlihat halus dan stabil saat tanggal diganti
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 300) {
+        await new Promise((resolve) => setTimeout(resolve, 300 - elapsed));
+      }
       setStats(data);
     } catch (err: any) {
       console.error('Error fetching dashboard stats:', err);
     } finally {
       setIsLoading(false);
+      setIsStatsLoading(false);
     }
   };
 
@@ -631,7 +639,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               {/* Pill Tanggal */}
               <div className="relative">
                 <div className="h-9 px-3.5 rounded-xl border border-slate-200 bg-white flex items-center space-x-2 shadow-2xs">
-                  <Calendar className="w-4 h-4 text-emerald-600 shrink-0" />
+                  {isStatsLoading ? (
+                    <Loader2 className="w-4 h-4 text-emerald-600 animate-spin shrink-0" />
+                  ) : (
+                    <Calendar className="w-4 h-4 text-emerald-600 shrink-0" />
+                  )}
                   <span className="text-xs sm:text-sm font-bold text-slate-800">
                     {formatIndonesianDate(selectedDate)}
                   </span>
@@ -699,13 +711,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                   </span>
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 </div>
-                <div className="flex items-baseline justify-between mt-1.5">
-                  <span className="font-outfit text-2xl sm:text-[26px] font-black text-slate-900 leading-none">
-                    {hadirCount}
-                  </span>
-                  <span className="font-outfit text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                    {hadirPct}%
-                  </span>
+                <div className="flex items-baseline justify-between mt-1.5 h-7">
+                  {isStatsLoading ? (
+                    <div className="flex items-center gap-1.5 py-0.5">
+                      <Loader2 className="w-5 h-5 text-emerald-600 animate-spin shrink-0" />
+                      <span className="text-[11px] font-medium text-slate-400">Memuat...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="font-outfit text-2xl sm:text-[26px] font-black text-slate-900 leading-none">
+                        {hadirCount}
+                      </span>
+                      <span className="font-outfit text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                        {hadirPct}%
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -717,13 +738,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                   </span>
                   <Clock className="w-4 h-4 text-sky-600 shrink-0" />
                 </div>
-                <div className="flex items-baseline justify-between mt-1.5">
-                  <span className="font-outfit text-2xl sm:text-[26px] font-black text-slate-900 leading-none">
-                    {izinCount}
-                  </span>
-                  <span className="font-outfit text-xs font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100">
-                    {izinPct}%
-                  </span>
+                <div className="flex items-baseline justify-between mt-1.5 h-7">
+                  {isStatsLoading ? (
+                    <div className="flex items-center gap-1.5 py-0.5">
+                      <Loader2 className="w-5 h-5 text-sky-600 animate-spin shrink-0" />
+                      <span className="text-[11px] font-medium text-slate-400">Memuat...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="font-outfit text-2xl sm:text-[26px] font-black text-slate-900 leading-none">
+                        {izinCount}
+                      </span>
+                      <span className="font-outfit text-xs font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100">
+                        {izinPct}%
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -735,13 +765,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                   </span>
                   <HeartPulse className="w-4 h-4 text-amber-600 shrink-0" />
                 </div>
-                <div className="flex items-baseline justify-between mt-1.5">
-                  <span className="font-outfit text-2xl sm:text-[26px] font-black text-slate-900 leading-none">
-                    {sakitCount}
-                  </span>
-                  <span className="font-outfit text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
-                    {sakitPct}%
-                  </span>
+                <div className="flex items-baseline justify-between mt-1.5 h-7">
+                  {isStatsLoading ? (
+                    <div className="flex items-center gap-1.5 py-0.5">
+                      <Loader2 className="w-5 h-5 text-amber-600 animate-spin shrink-0" />
+                      <span className="text-[11px] font-medium text-slate-400">Memuat...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="font-outfit text-2xl sm:text-[26px] font-black text-slate-900 leading-none">
+                        {sakitCount}
+                      </span>
+                      <span className="font-outfit text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
+                        {sakitPct}%
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -753,13 +792,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                   </span>
                   <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
                 </div>
-                <div className="flex items-baseline justify-between mt-1.5">
-                  <span className="font-outfit text-2xl sm:text-[26px] font-black text-slate-900 leading-none">
-                    {alfaCount}
-                  </span>
-                  <span className="font-outfit text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100">
-                    {alfaPct}%
-                  </span>
+                <div className="flex items-baseline justify-between mt-1.5 h-7">
+                  {isStatsLoading ? (
+                    <div className="flex items-center gap-1.5 py-0.5">
+                      <Loader2 className="w-5 h-5 text-rose-600 animate-spin shrink-0" />
+                      <span className="text-[11px] font-medium text-slate-400">Memuat...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="font-outfit text-2xl sm:text-[26px] font-black text-slate-900 leading-none">
+                        {alfaCount}
+                      </span>
+                      <span className="font-outfit text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100">
+                        {alfaPct}%
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -1033,19 +1081,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               </div>
             )}
           </section>
-        </div>
-
-        {/* Tombol Log Out di Paling Bawah Beranda */}
-        <div className="pt-6 pb-2 flex justify-center">
-          <button
-            type="button"
-            onClick={logout}
-            className="w-full sm:w-auto min-w-[220px] flex items-center justify-center gap-2.5 px-6 py-3 rounded-2xl bg-white border border-rose-200/90 text-rose-600 hover:bg-rose-50 hover:border-rose-300 active:scale-[0.98] transition-all font-jakarta font-bold text-sm shadow-xs cursor-pointer"
-            title="Keluar dari akun SIAS"
-          >
-            <LogOut className="w-4.5 h-4.5 text-rose-500 shrink-0" />
-            <span>Keluar / Log Out</span>
-          </button>
         </div>
 
       </main>
