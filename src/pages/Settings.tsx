@@ -11,8 +11,12 @@ import {
   X,
   Star,
   MessageSquareHeart,
+  Download,
+  Laptop,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
+import { usePWAInstall } from '../hooks/usePWAInstall.ts';
+import { InstallGuideModal } from '../components/InstallGuideModal.tsx';
 import { api } from '../services/api.ts';
 import { Header } from '../components/Header.tsx';
 import { PrayerType } from '../types.ts';
@@ -26,6 +30,8 @@ import {
 export const Settings: React.FC = () => {
   const { user } = useAuth();
   const isMasterAdmin = user?.username?.toLowerCase() === 'kamal' || user?.role === 'admin';
+  const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   // School & Prayer System configuration
   const [schoolName, setSchoolName] = useState('');
@@ -385,6 +391,56 @@ export const Settings: React.FC = () => {
         </form>
 
         {/* ======================================================== */}
+        {/* KARTU DOWNLOAD & PANDUAN PASANG APLIKASI DI CHROME */}
+        {/* ======================================================== */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <Download className="w-5 h-5 text-emerald-700" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-outfit font-extrabold text-sm sm:text-base text-slate-900 tracking-tight">
+                    Download & Pasang Aplikasi di Chrome
+                  </h3>
+                  {isInstalled && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      Sudah Terpasang
+                    </span>
+                  )}
+                </div>
+                <p className="font-jakarta text-xs text-slate-500">
+                  Panduan langkah demi langkah memasang SIAS di Laptop, PC, maupun HP Android.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowInstallGuide(true)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#063826] to-[#0d5940] hover:from-[#04281b] hover:to-[#094230] active:scale-95 text-white font-bold rounded-xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer"
+            >
+              <Laptop className="w-4 h-4 text-emerald-300" />
+              <span>Buka Panduan Pasang (Laptop & HP)</span>
+            </button>
+
+            {isInstallable && (
+              <button
+                type="button"
+                onClick={install}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>⚡ Coba Pasang Otomatis (1-Klik)</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ======================================================== */}
         {/* KARTU PENILAIAN & SARAN APLIKASI (FEEDBACK) */}
         {/* ======================================================== */}
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
@@ -431,6 +487,15 @@ export const Settings: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal Panduan Download di Chrome */}
+      <InstallGuideModal
+        isOpen={showInstallGuide}
+        onClose={() => setShowInstallGuide(false)}
+        onDirectInstall={isInstallable ? install : undefined}
+        isInstallable={isInstallable}
+        defaultTab={isIOS ? 'ios' : 'laptop'}
+      />
     </div>
   );
 };

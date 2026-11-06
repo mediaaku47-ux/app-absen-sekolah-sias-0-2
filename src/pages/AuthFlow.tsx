@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { usePWAInstall } from '../hooks/usePWAInstall.ts';
 import { api } from '../services/api.ts';
 import { AppLogo } from '../components/AppLogo.tsx';
+import { InstallGuideModal } from '../components/InstallGuideModal.tsx';
 import {
   validateSchoolCategory,
   detectLevelFromName,
@@ -52,7 +53,7 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({ onSuccess, initialScreen = '
   // PWA Install prompt state
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [showInstallDialog, setShowInstallDialog] = useState(false);
-  const [showIOSInstallGuide, setShowIOSInstallGuide] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   const handleStartClick = () => {
     // Jika aplikasi sudah berjalan dalam mode PWA terpasang, langsung ke halaman login
@@ -60,21 +61,24 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({ onSuccess, initialScreen = '
       setActiveScreen('login');
       return;
     }
-    // Tampilkan popup opsi menginstal aplikasi atau lanjut di Chrome
+    // Tampilkan popup 2 opsi: Download aplikasi atau lanjut buka di Chrome
     setShowInstallDialog(true);
   };
 
   const handleChooseInstall = async () => {
     setShowInstallDialog(false);
-    if (isIOS) {
-      setShowIOSInstallGuide(true);
-      return;
-    }
-    // Pemicu unduhan langsung melalui dialog instalasi resmi browser
     if (isInstallable) {
-      await install();
+      const outcome = await install();
+      if (!outcome) {
+        // Jika pengguna batal atau browser butuh petunjuk manual
+        setActiveScreen('login');
+      } else {
+        setActiveScreen('login');
+      }
+    } else {
+      // Jika browser belum mendukung auto-prompt (seperti Chrome PC manual atau iOS), buka panduan langsung
+      setShowInstallGuide(true);
     }
-    setActiveScreen('login');
   };
 
   const handleChooseContinueBrowser = () => {
@@ -966,7 +970,7 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({ onSuccess, initialScreen = '
           </div>
         </div>
       )}
-      {/* Modal Dialog: Apakah Anda ingin menginstal aplikasi? */}
+      {/* Modal Dialog 2 Opsi: Download atau Lanjut Buka di Chrome */}
       {showInstallDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
           <div
@@ -999,10 +1003,10 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({ onSuccess, initialScreen = '
               Apakah Anda ingin menginstal aplikasi?
             </h3>
             <p className="font-jakarta text-xs sm:text-[13px] text-slate-500 mt-2 leading-relaxed max-w-[280px] mx-auto">
-              Pasang aplikasi SIAS langsung di HP untuk akses lebih cepat seperti aplikasi Android, atau lanjutkan di browser Chrome.
+              Pasang aplikasi SIAS langsung di HP atau Laptop untuk akses lebih cepat, atau lanjutkan membukanya di browser Chrome.
             </p>
 
-            {/* 2 Opsi Pilihan Sesuai Permintaan: Ya (Download) atau Tidak (Lanjut di Chrome) */}
+            {/* 2 Opsi Pilihan: Ya (Download) atau Tidak (Lanjut di Chrome) */}
             <div className="mt-6 space-y-2.5">
               {/* Opsi 1: Ya -> Langsung download / instal */}
               <button
@@ -1028,51 +1032,18 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({ onSuccess, initialScreen = '
         </div>
       )}
 
-      {/* Modal Panduan Tambah ke Layar Utama Khusus Pengguna iOS */}
-      {showIOSInstallGuide && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-slate-800 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <img src="/assets/logo-192.png" alt="Logo SIAS" className="w-8 h-8 rounded-lg" />
-                <h3 className="font-outfit font-black text-base text-slate-900">
-                  Pasang SIAS di iPhone / iPad
-                </h3>
-              </div>
-              <button
-                onClick={() => {
-                  setShowIOSInstallGuide(false);
-                  setActiveScreen('login');
-                }}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2.5 text-xs text-slate-600 font-medium">
-              <div className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0">1</span>
-                <p>Tekan tombol <strong>Bagikan / Share</strong> (ikon kotak dengan panah ke atas) di bilah bawah browser Safari.</p>
-              </div>
-              <div className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0">2</span>
-                <p>Gulir ke bawah lalu pilih menu <strong>Tambahkan ke Layar Utama (Add to Home Screen)</strong>.</p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setShowIOSInstallGuide(false);
-                setActiveScreen('login');
-              }}
-              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold text-xs text-white cursor-pointer shadow-xs"
-            >
-              Lanjutkan ke Aplikasi
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Modal Panduan Download / Pasang Aplikasi di Chrome (Laptop & HP) */}
+      <InstallGuideModal
+        isOpen={showInstallGuide}
+        onClose={() => {
+          setShowInstallGuide(false);
+          setActiveScreen('login');
+        }}
+        onContinueToApp={() => setActiveScreen('login')}
+        onDirectInstall={isInstallable ? install : undefined}
+        isInstallable={isInstallable}
+        defaultTab={isIOS ? 'ios' : 'laptop'}
+      />
     </div>
   );
 };

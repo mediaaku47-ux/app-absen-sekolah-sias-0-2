@@ -17,7 +17,6 @@ import { AdminFeedback } from './pages/AdminFeedback.tsx';
 import { AuthFlow } from './pages/AuthFlow.tsx';
 import { PageLoader } from './components/PageLoader.tsx';
 import { FeedbackModal } from './components/FeedbackModal.tsx';
-import { PWAInstallButton } from './components/PWAInstallButton.tsx';
 
 function MainApp() {
   const { user, isLoading } = useAuth();
@@ -61,7 +60,6 @@ function MainApp() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <PWAInstallButton />
         <main className="flex-1">
           {currentPath === '/dashboard' && <Dashboard onNavigate={handleNavigate} />}
           {currentPath === '/attendance' && (
